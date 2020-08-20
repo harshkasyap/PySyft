@@ -65,6 +65,7 @@ def softmax_cross_entropy_with_logits(logits, targets, batch_size):
 def naive_sgd(param, **kwargs):
     return param - kwargs['lr'] * param.grad
 
+
 @sy.func2plan()
 def training_plan(X, y, batch_size, lr, model_params):
     # inject params into model
@@ -105,11 +106,11 @@ batch_size = th.tensor([3.0])
 
 _ = training_plan.build(X, y, batch_size, lr, model_params, trace_autograd=True)
 
-#print(training_plan.code)
-#print(training_plan.torchscript.code)
+print(training_plan.code)
+print(training_plan.torchscript.code)
 
 training_plan.base_framework = TranslationTarget.TENSORFLOW_JS.value
-#print(training_plan.code)
+print(training_plan.code)
 training_plan.base_framework = TranslationTarget.PYTORCH.value
 
 @sy.func2plan()
@@ -122,7 +123,8 @@ def avg_plan(avg, item, num):
 # Build the Plan
 _ = avg_plan.build(model_params, model_params, th.tensor([1.0]))
 
-#print(avg_plan.code)
+# Let's check Plan contents
+print(avg_plan.code)
 
 # Test averaging plan
 # Pretend there're diffs, all params of which are ones * dummy_coeffs
@@ -143,9 +145,9 @@ for i, param in enumerate(model_params):
     expected = th.ones_like(param) * mean_coeff
     assert avg[i].eq(expected).all(), f"param #{i}"
 
-# Default gateway address when running locally 
-gatewayWsUrl = "network:5000"
-grid = ModelCentricFLClient(id="test", address=gatewayWsUrl, secure=False)
+# PyGrid Node address
+gridAddress = "alice:5000"
+grid = ModelCentricFLClient(id="test", address=gridAddress, secure=False)
 grid.connect()# These name/version you use in worker
 name = "mnist"
 version = "1.0.0"
@@ -169,6 +171,53 @@ server_config = {
     "minimum_upload_speed": 0,
     "minimum_download_speed": 0,
     "iterative_plan": True  # tells PyGrid that avg plan is executed per diff
+}
+
+private_key = """
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAzQMcI09qonB9OZT20X3Z/oigSmybR2xfBQ1YJ1oSjQ3YgV+G
+FUuhEsGDgqt0rok9BreT4toHqniFixddncTHg7EJzU79KZelk2m9I2sEsKUqEsEF
+lMpkk9qkPHhJB5AQoClOijee7UNOF4yu3HYvGFphwwh4TNJXxkCg69/RsvPBIPi2
+9vXFQzFE7cbN6jSxiCtVrpt/w06jJUsEYgNVQhUFABDyWN4h/67M1eArGA540vyd
+kYdSIEQdknKHjPW62n4dvqDWxtnK0HyChsB+LzmjEnjTJqUzr7kM9Rzq3BY01DNi
+TVcB2G8t/jICL+TegMGU08ANMKiDfSMGtpz3ZQIDAQABAoIBAD+xbKeHv+BxxGYE
+Yt5ZFEYhGnOk5GU/RRIjwDSRplvOZmpjTBwHoCZcmsgZDqo/FwekNzzuch1DTnIV
+M0+V2EqQ0TPJC5xFcfqnikybrhxXZAfpkhtU+gR5lDb5Q+8mkhPAYZdNioG6PGPS
+oGz8BsuxINhgJEfxvbVpVNWTdun6hLOAMZaH3DHgi0uyTBg8ofARoZP5RIbHwW+D
+p+5vd9x/x7tByu76nd2UbMp3yqomlB5jQktqyilexCIknEnfb3i/9jqFv8qVE5P6
+e3jdYoJY+FoomWhqEvtfPpmUFTY5lx4EERCb1qhWG3a7sVBqTwO6jJJBsxy3RLIS
+Ic0qZcECgYEA6GsBP11a2T4InZ7cixd5qwSeznOFCzfDVvVNI8KUw+n4DOPndpao
+TUskWOpoV8MyiEGdQHgmTOgGaCXN7bC0ERembK0J64FI3TdKKg0v5nKa7xHb7Qcv
+t9ccrDZVn4y/Yk5PCqjNWTR3/wDR88XouzIGaWkGlili5IJqdLEvPvUCgYEA4dA+
+5MNEQmNFezyWs//FS6G3lTRWgjlWg2E6BXXvkEag6G5SBD31v3q9JIjs+sYdOmwj
+kfkQrxEtbs173xgYWzcDG1FI796LTlJ/YzuoKZml8vEF3T8C4Bkbl6qj9DZljb2j
+ehjTv5jA256sSUEqOa/mtNFUbFlBjgOZh3TCsLECgYAc701tdRLdXuK1tNRiIJ8O
+Enou26Thm6SfC9T5sbzRkyxFdo4XbnQvgz5YL36kBnIhEoIgR5UFGBHMH4C+qbQR
+OK+IchZ9ElBe8gYyrAedmgD96GxH2xAuxAIW0oDgZyZgd71RZ2iBRY322kRJJAdw
+Xq77qo6eXTKpni7grjpijQKBgDHWRAs5DVeZkTwhoyEW0fRfPKUxZ+ZVwUI9sxCB
+dt3guKKTtoY5JoOcEyJ9FdBC6TB7rV4KGiSJJf3OXAhgyP9YpNbimbZW52fhzTuZ
+bwO/ZWC40RKDVZ8f63cNsiGz37XopKvNzu36SJYv7tY8C5WvvLsrd/ZxvIYbRUcf
+/dgBAoGBAMdR5DXBcOWk3+KyEHXw2qwWcGXyzxtca5SRNLPR2uXvrBYXbhFB/PVj
+h3rGBsiZbnIvSnSIE+8fFe6MshTl2Qxzw+F2WV3OhhZLLtBnN5qqeSe9PdHLHm49
+XDce6NV2D1mQLBe8648OI5CScQENuRGxF2/h9igeR4oRRsM1gzJN
+-----END RSA PRIVATE KEY-----
+""".strip()
+
+public_key = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzQMcI09qonB9OZT20X3Z
+/oigSmybR2xfBQ1YJ1oSjQ3YgV+GFUuhEsGDgqt0rok9BreT4toHqniFixddncTH
+g7EJzU79KZelk2m9I2sEsKUqEsEFlMpkk9qkPHhJB5AQoClOijee7UNOF4yu3HYv
+GFphwwh4TNJXxkCg69/RsvPBIPi29vXFQzFE7cbN6jSxiCtVrpt/w06jJUsEYgNV
+QhUFABDyWN4h/67M1eArGA540vydkYdSIEQdknKHjPW62n4dvqDWxtnK0HyChsB+
+LzmjEnjTJqUzr7kM9Rzq3BY01DNiTVcB2G8t/jICL+TegMGU08ANMKiDfSMGtpz3
+ZQIDAQAB
+-----END PUBLIC KEY-----
+""".strip()
+
+server_config["authentication"] = {
+    "type": "jwt",
+    "pub_key": public_key,
 }
 
 model_params_state = State(
